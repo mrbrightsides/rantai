@@ -42,6 +42,14 @@ export function WalletAuth() {
     }
   }, [session?.address]);
 
+  // Reset sign guard when wallet disconnects (reject, error, or manual disconnect)
+  // so the user can retry by reconnecting their wallet.
+  useEffect(() => {
+    if (!address) {
+      hasPrompted.current = false;
+    }
+  }, [address]);
+
   // wagmi v2: chain is undefined when connected to a network not in the configured chains list
   const isUnsupportedChain = isConnected && !chain;
 
@@ -68,7 +76,9 @@ export function WalletAuth() {
 
           await verifySignature.mutateAsync({ data: { message, signature } });
 
-          queryClient.invalidateQueries({ queryKey: getGetSiweSessionQueryKey() });
+          // Force immediate refetch (not just mark-stale) so the session
+          // cookie is read back right away and the UI switches to logged-in state.
+          await queryClient.refetchQueries({ queryKey: getGetSiweSessionQueryKey() });
           // Don't reset hasPrompted here — keep it true until session loads.
           // Resetting here causes a re-trigger loop because session?.address is
           // still undefined while the query refetches.
