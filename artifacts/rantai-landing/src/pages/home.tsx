@@ -167,30 +167,26 @@ export default function Home() {
 
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {products.map((product, i) => (
-                <motion.a
-                  href={product.link}
+                <motion.div
                   key={product.name}
                   initial={{ opacity: 0, scale: 0.95 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.05, duration: 0.4 }}
-                  className="group p-5 rounded-xl border border-white/10 bg-white/[0.01] hover:bg-cyan-950/10 hover:border-cyan-500/40 transition-all flex flex-col h-full"
+                  className="p-5 rounded-xl border border-white/10 bg-white/[0.01] flex flex-col h-full"
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <h3 className="font-display font-bold text-white text-lg group-hover:text-cyan-400 transition-colors">
+                    <h3 className="font-display font-bold text-white text-lg">
                       {product.name}
                     </h3>
                     <Badge variant={product.status as any} className="uppercase tracking-wider text-[10px] px-2">
                       {product.status}
                     </Badge>
                   </div>
-                  <p className="text-slate-400 text-sm flex-1 mb-6">
+                  <p className="text-slate-400 text-sm flex-1">
                     {product.desc}
                   </p>
-                  <div className="flex items-center text-xs font-mono text-slate-500 group-hover:text-cyan-400 transition-colors">
-                    Explore <ChevronRight className="w-3 h-3 ml-1" />
-                  </div>
-                </motion.a>
+                </motion.div>
               ))}
             </div>
           </div>
