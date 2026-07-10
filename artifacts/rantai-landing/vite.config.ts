@@ -5,19 +5,10 @@ import { defineConfig } from 'vite';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
-const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    'PORT environment variable is required but was not provided.',
-  );
-}
-
+// PORT is only needed for the dev/preview server, not for `vite build`.
+// Fall back to 3000 so Vercel (and other CI build environments) don't throw.
+const rawPort = process.env.PORT ?? '3000';
 const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
-}
 
 const basePath = process.env.BASE_PATH;
 
