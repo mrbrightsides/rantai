@@ -62,10 +62,20 @@ router.post("/siwe/verify", async (req, res): Promise<void> => {
     return;
   }
 
-  // Enforce expected domain constraints server-side
-  const expectedDomain = process.env.REPLIT_DEV_DOMAIN ?? process.env.REPLIT_DOMAINS?.split(",")[0]?.trim() ?? req.hostname;
-  if (siweMessage.domain !== expectedDomain && siweMessage.domain !== req.hostname) {
-    req.log.warn({ domain: siweMessage.domain, expected: expectedDomain }, "SIWE domain mismatch");
+  // Build the set of domains we accept in SIWE messages.
+  // Priority: FRONTEND_DOMAIN env var → Replit dev/prod domains → API server hostname.
+  const acceptedDomains = new Set<string>();
+  if (process.env.FRONTEND_DOMAIN) {
+    process.env.FRONTEND_DOMAIN.split(",").forEach((d) => acceptedDomains.add(d.trim()));
+  }
+  if (process.env.REPLIT_DEV_DOMAIN) acceptedDomains.add(process.env.REPLIT_DEV_DOMAIN);
+  if (process.env.REPLIT_DOMAINS) {
+    process.env.REPLIT_DOMAINS.split(",").forEach((d) => acceptedDomains.add(d.trim()));
+  }
+  acceptedDomains.add(req.hostname);
+
+  if (!acceptedDomains.has(siweMessage.domain)) {
+    req.log.warn({ domain: siweMessage.domain, accepted: [...acceptedDomains] }, "SIWE domain mismatch");
     res.status(401).json({ error: "Domain mismatch in SIWE message" });
     return;
   }
