@@ -360,7 +360,11 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  // When a base URL is set the request is cross-origin, so cookies (session)
+  // must be included explicitly. Same-origin requests are unaffected.
+  const credentials = init.credentials ?? (_baseUrl ? 'include' : 'same-origin');
+
+  const response = await fetch(input, { ...init, method, headers, credentials });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
