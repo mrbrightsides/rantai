@@ -1,0 +1,162 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: siwe
+    description: Sign-In With Ethereum operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /siwe/nonce:
+    get:
+      operationId: getSiweNonce
+      tags: [siwe]
+      summary: Get SIWE nonce
+      description: Returns a one-time nonce for use in a SIWE message
+      responses:
+        "200":
+          description: Nonce generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiweNonce"
+
+  /siwe/verify:
+    post:
+      operationId: verifySiweSignature
+      tags: [siwe]
+      summary: Verify SIWE signature
+      description: Verifies a signed SIWE message and creates a session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiweVerifyInput"
+      responses:
+        "200":
+          description: Verification successful, session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiweSession"
+        "400":
+          description: Invalid message or signature
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiweError"
+        "401":
+          description: Signature verification failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiweError"
+
+  /siwe/session:
+    get:
+      operationId: getSiweSession
+      tags: [siwe]
+      summary: Get current SIWE session
+      description: Returns the current authenticated wallet address if a session exists
+      responses:
+        "200":
+          description: Session info (address may be null if not authenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiweSession"
+
+  /siwe/logout:
+    post:
+      operationId: siweLogout
+      tags: [siwe]
+      summary: Logout / destroy session
+      description: Destroys the current SIWE session
+      responses:
+        "200":
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiweLogoutResult"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    SiweNonce:
+      type: object
+      properties:
+        nonce:
+          type: string
+      required:
+        - nonce
+
+    SiweVerifyInput:
+      type: object
+      properties:
+        message:
+          type: string
+          description: The SIWE message string
+        signature:
+          type: string
+          description: The EIP-191 signature of the message
+      required:
+        - message
+        - signature
+
+    SiweSession:
+      type: object
+      properties:
+        address:
+          type: ["string", "null"]
+          description: Authenticated wallet address, or null if not authenticated
+        chainId:
+          type: ["integer", "null"]
+          description: Chain ID from the SIWE message
+      required:
+        - address
+        - chainId
+
+    SiweLogoutResult:
+      type: object
+      properties:
+        ok:
+          type: boolean
+      required:
+        - ok
+
+    SiweError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
