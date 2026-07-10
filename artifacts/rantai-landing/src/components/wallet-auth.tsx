@@ -69,11 +69,13 @@ export function WalletAuth() {
           await verifySignature.mutateAsync({ data: { message, signature } });
 
           queryClient.invalidateQueries({ queryKey: getGetSiweSessionQueryKey() });
+          // Don't reset hasPrompted here — keep it true until session loads.
+          // Resetting here causes a re-trigger loop because session?.address is
+          // still undefined while the query refetches.
         } catch (error) {
           console.error('SIWE signature failed', error);
+          hasPrompted.current = false; // only reset on failure so user can retry
           disconnect();
-        } finally {
-          hasPrompted.current = false;
         }
       }
     }
@@ -81,6 +83,7 @@ export function WalletAuth() {
   }, [isConnected, address, chainId, session, getNonce, signMessageAsync, verifySignature, queryClient, disconnect]);
 
   const handleLogout = async () => {
+    hasPrompted.current = false; // allow sign-in again after reconnect
     await logout.mutateAsync();
     queryClient.invalidateQueries({ queryKey: getGetSiweSessionQueryKey() });
     disconnect();
