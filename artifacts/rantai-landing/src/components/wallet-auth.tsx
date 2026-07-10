@@ -74,14 +74,17 @@ export function WalletAuth() {
 
           const signature = await signMessageAsync({ message });
 
-          await verifySignature.mutateAsync({ data: { message, signature } });
+          const verified = await verifySignature.mutateAsync({ data: { message, signature } });
 
-          // Force immediate refetch (not just mark-stale) so the session
-          // cookie is read back right away and the UI switches to logged-in state.
-          await queryClient.refetchQueries({ queryKey: getGetSiweSessionQueryKey() });
-          // Don't reset hasPrompted here — keep it true until session loads.
-          // Resetting here causes a re-trigger loop because session?.address is
-          // still undefined while the query refetches.
+          // Write the session directly into the React Query cache from the verify
+          // response — this bypasses the GET /session round-trip entirely.
+          // Without this, the browser sends a conditional GET with If-None-Match,
+          // the server returns 304 (ETag matches the pre-login empty response), and
+          // the frontend never sees the new session data.
+          queryClient.setQueryData(getGetSiweSessionQueryKey(), {
+            address: verified.address,
+            chainId: verified.chainId,
+          });
         } catch (error) {
           console.error('SIWE signature failed', error);
           hasPrompted.current = false; // only reset on failure so user can retry
