@@ -58,25 +58,35 @@ app.use(
 // In production: allow domains from REPLIT_DOMAINS env var.
 function getAllowedOrigins(): string[] {
   const origins: string[] = [];
+
+  // Generic comma-separated allowlist — set this in Railway/Render/etc.
+  // e.g. ALLOWED_ORIGINS=https://rantai-landing.vercel.app,https://rantai.elpeef.com
+  const allowedOrigins = process.env.ALLOWED_ORIGINS;
+  if (allowedOrigins) {
+    for (const o of allowedOrigins.split(",")) {
+      const origin = o.trim();
+      if (origin) origins.push(origin);
+    }
+  }
+
   // Replit domains (comma-separated in production)
   const replitDomains = process.env.REPLIT_DOMAINS;
   if (replitDomains) {
     for (const d of replitDomains.split(",")) {
       const domain = d.trim();
-      if (domain) {
-        origins.push(`https://${domain}`);
-      }
+      if (domain) origins.push(`https://${domain}`);
     }
   }
+
   // Replit dev domain (preview proxy in development)
   const devDomain = process.env.REPLIT_DEV_DOMAIN;
-  if (devDomain) {
-    origins.push(`https://${devDomain}`);
-  }
-  // Fallback for local development without Replit env vars
+  if (devDomain) origins.push(`https://${devDomain}`);
+
+  // Fallback for local development without any env vars
   if (origins.length === 0) {
     origins.push("http://localhost", "http://127.0.0.1");
   }
+
   return origins;
 }
 
