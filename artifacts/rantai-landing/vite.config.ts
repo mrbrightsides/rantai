@@ -10,13 +10,9 @@ import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 const rawPort = process.env.PORT ?? '3000';
 const port = Number(rawPort);
 
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    'BASE_PATH environment variable is required but was not provided.',
-  );
-}
+// BASE_PATH is Replit-specific (path-based routing). On Vercel the app lives
+// at the root, so fall back to '/' when the variable is not set.
+const basePath = process.env.BASE_PATH ?? '/';
 
 export default defineConfig({
   base: basePath,
